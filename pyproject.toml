@@ -19,7 +19,10 @@ dependencies = [
     "jinja2>=3.1.6,<4",
     "twilio>=9.5.1, <10",
     "fastapi>=0.115.12",
-    "python-multipart>=0.0.20, <0.1.0"
+    "python-multipart>=0.0.20, <0.1.0",
+    "apscheduler>=3.10.1,<4.0.0",
+    "dateparser>=1.2.0,<2.0.0",
+    "python-dotenv>=1.0.0,<2.0.0"
 ]
 
 [[project.authors]]

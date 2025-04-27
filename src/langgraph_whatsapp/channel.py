@@ -44,40 +44,59 @@ class WhatsAppAgentTwilio(WhatsAppAgent):
         self.agent = Agent()
 
     async def handle_message(self, request: Request) -> str:
-        form = await request.form()
+        try:
+            LOGGER.info("Receiving WhatsApp message request")
+            form = await request.form()
+            
+            # Log all form data for debugging
+            LOGGER.debug(f"Received WhatsApp form data: {dict(form)}")
 
-        sender  = form.get("From", "").strip()
-        content = form.get("Body", "").strip()
-        if not sender:
-            raise HTTPException(400, detail="Missing 'From' in request form")
+            sender = form.get("From", "").strip()
+            content = form.get("Body", "").strip()
+            
+            if not sender:
+                LOGGER.error("Missing 'From' field in request form")
+                raise HTTPException(400, detail="Missing 'From' in request form")
+                
+            LOGGER.info(f"Processing message from {sender}: {content[:50]}{'...' if len(content) > 50 else ''}")
 
-        # Collect ALL images (you'll forward only the first one for now)
-        images = []
-        for i in range(int(form.get("NumMedia", "0"))):
-            url   = form.get(f"MediaUrl{i}", "")
-            ctype = form.get(f"MediaContentType{i}", "")
-            if url and ctype.startswith("image/"):
-                try:
-                    images.append({
-                        "url": url,
-                        "data_uri": twilio_url_to_data_uri(url, ctype),
-                    })
-                except Exception as err:
-                    LOGGER.error("Failed to download %s: %s", url, err)
+            # Collect ALL images
+            images = []
+            num_media = int(form.get("NumMedia", "0"))
+            LOGGER.info(f"Message contains {num_media} media attachments")
+            
+            for i in range(num_media):
+                url = form.get(f"MediaUrl{i}", "")
+                ctype = form.get(f"MediaContentType{i}", "")
+                if url and ctype.startswith("image/"):
+                    try:
+                        LOGGER.info(f"Processing image {i+1}/{num_media} of type {ctype}")
+                        images.append({
+                            "url": url,
+                            "data_uri": twilio_url_to_data_uri(url, ctype),
+                        })
+                    except Exception as err:
+                        LOGGER.error(f"Failed to download image from {url}: {err}")
 
-        # Assemble payload for the LangGraph agent
-        input_data = {
-            "id": sender,
-            "user_message": content,
-        }
-        if images:
-            # Pass all images to the agent
-            input_data["images"] = [
-                {"image_url": {"url": img["data_uri"]}} for img in images
-            ]
+            LOGGER.info(f"Invoking agent with sender ID: {sender}")
+            response = await self.agent.invoke(sender, content, images if images else None)
+            
+            # Extract response text from the new format
+            reply = response.get('response', "I'm sorry, I encountered a technical issue.")
+            LOGGER.info(f"Agent response: {reply[:50]}{'...' if len(reply) > 50 else ''}")
 
-        reply = await self.agent.invoke(**input_data)
-
-        twiml = MessagingResponse()
-        twiml.message(reply)
-        return str(twiml)
+            # Create TwiML response
+            twiml = MessagingResponse()
+            msg = twiml.message()
+            msg.body(reply)  # Use body() method to set message content
+            response_xml = str(twiml)  # TwiML already includes XML declaration
+            LOGGER.debug(f"Generated TwiML response: {response_xml}")
+            return response_xml
+            
+        except Exception as e:
+            LOGGER.exception(f"Error handling WhatsApp message: {str(e)}")
+            # Return a fallback response instead of crashing
+            twiml = MessagingResponse()
+            msg = twiml.message()
+            msg.body("I'm sorry, I encountered a technical issue. Please try again later.")
+            return str(twiml)
