@@ -1,85 +1,61 @@
-# LangGraph WhatsApp Agent
+# WhatsApp Finance Assistant
 
-This WhatsApp agent is built using the LangGraph framework. It allows you to interact with an AI assistant through WhatsApp, with capabilities to save links and set reminders.
+A WhatsApp bot that helps you manage your personal finances, schedule meetings, set reminders, and save links.
 
 ## Features
 
-- Link Management: Store and retrieve links shared during conversations
-- Reminders: Set reminders for tasks at specific times
-- Image Processing: The agent can process images shared in WhatsApp
+### Financial Management
+- Track expenses with natural language
+  - "I spent 500 on groceries"
+  - "I have spent 300 on transportation"
+  - "I paid 1000 for rent"
+  - "I bought food for 200"
+  - "I used 300 on transportation"
 
-## Setup Instructions
+- Check budget status
+  - "What's my budget for groceries?"
+  - "How much can I spend on food?"
+  - "Check budget for entertainment"
 
-### 1. Prerequisites
+- View recent expenses
+  - "Show my last 5 expenses"
+  - "List recent expenses"
+  - "Show spending history"
 
-- Python 3.11 or higher
-- A Twilio account with WhatsApp sandbox configured
-- LangGraph server (local or remote)
+### Calendar Management
+- Book meetings and events
+  - "Book a meeting with John at 3 PM"
+  - "Schedule a call tomorrow at 9 AM"
+  - "Create appointment with dentist on Friday"
 
-### 2. Installation
+### Reminders
+- Set reminders with natural language
+  - "Remind me to call John at 3pm"
+  - "Remind me tomorrow to check email"
+  - "Remind me in 2 hours to take a break"
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/langgraph-whatsapp-agent.git
-   cd langgraph-whatsapp-agent
-   ```
+### Link Management
+- Save and retrieve links
+  - Automatically saves shared links
+  - "Show my saved links"
+  - "Find my GitHub links"
+  - "Get my Twitter links"
 
-2. Install the dependencies:
-   ```
-   pip install -e .
-   ```
+## Setup
 
-3. Copy `.env.example` to `.env` and add your credentials:
-   ```
-   cp .env.example .env
-   ```
-
-4. Edit the `.env` file with your Twilio credentials and other settings.
-
-### 3. Running the Agent
-
-1. Start the LangGraph server if you're running it locally:
-   ```
-   langraph server start
-   ```
-
-2. Run the WhatsApp server:
-   ```
-   python -m src.langgraph_whatsapp.server
-   ```
-
-3. Configure your Twilio WhatsApp Sandbox to point to your webhook:
-   - If running locally, you'll need to expose your server (e.g., using ngrok)
-   - Set the webhook URL in Twilio to `https://your-domain.com/whatsapp`
+1. Create a Google Cloud project and enable Google Sheets API
+2. Set up OAuth 2.0 credentials and save as `sheets_credentials.json`
+3. Create a Google Spreadsheet with "Expenses" and "Budgets" tabs
+4. Update the spreadsheet ID in your configuration
 
 ## Usage
 
-Once set up, you can interact with the agent through WhatsApp:
+1. Start the server: `python run_server.py`
+2. Connect your WhatsApp account
+3. Start chatting with the bot using natural language commands
 
-1. **Save links**: Share a link or URL in a message, and the agent will offer to save it for you.
+## Dependencies
 
-2. **Retrieve links**: Ask "Show me my saved links" or "What links do I have?"
-
-3. **Set reminders**: Send a message like "Remind me to call John at 3 PM tomorrow" and the agent will set a reminder.
-
-## Development
-
-### Database
-
-The agent uses SQLite to store:
-- Links shared by users
-- Reminders created by users
-
-The database is automatically created at `src/langgraph_whatsapp/data/links.db`.
-
-### Adding New Tools
-
-To add new capabilities to the agent:
-1. Add new functions in `src/langgraph_whatsapp/tools.py`
-2. Decorate them with `@tool`
-3. Add them to the `all_tools` list
-4. Update the system prompt in `enhance_system_prompt` method in `agent.py`
-
-## License
-
-This project is licensed under the terms included in the LICENSE file.
+- Google Sheets API
+- SQLite for local storage
+- Python WhatsApp Web API

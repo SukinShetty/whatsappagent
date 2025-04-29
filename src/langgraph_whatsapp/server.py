@@ -1,6 +1,7 @@
 # server.py
 import logging
 import os
+import requests
 from urllib.parse import parse_qs
 import atexit
 
@@ -136,6 +137,16 @@ async def test_whatsapp_direct(From: str = Form(...), Body: str = Form(...)):
         LOGGER.exception("Error in test endpoint: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
+@APP.get("/test-now")
+async def test_now():
+    """Endpoint that forwards to the test-reminder endpoint"""
+    try:
+        # Make a request to the test-reminder endpoint
+        response = requests.get("http://127.0.0.1:8081/test-reminder")
+        return response.json()
+    except Exception as e:
+        LOGGER.error(f"Error testing reminder: {e}")
+        return {"error": str(e)}
 
 if __name__ == "__main__":
     import uvicorn
